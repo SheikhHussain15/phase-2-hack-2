@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 from src.database import get_session
 from src.middleware.auth_middleware import get_current_user
 from src.auth.schemas import TokenData
-from src.models.user import UserPublic
+from src.models.user import User, UserPublic
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -25,11 +25,13 @@ def get_user(
         )
 
     # Get the user from the database
-    user = session.get(UserPublic, user_id)
+    statement = select(User).where(User.id == user_id)
+    user = session.exec(statement).first()
+    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
 
-    return user
+    return UserPublic.model_validate(user)

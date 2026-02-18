@@ -3,7 +3,7 @@ from sqlalchemy.pool import QueuePool
 import os
 
 # Get database URL from environment variable
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./todo_app.db")
 
 # Create the database engine with serverless-friendly settings
 connect_args = {}

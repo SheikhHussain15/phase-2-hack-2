@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import apiClient from '@/utils/api'
+import { Container, Card, Input, Button } from '@components/ui'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -29,15 +30,31 @@ export default function Login() {
       const response = await apiClient.post('/auth/login', {
         email,
         password
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
 
-      const { token } = response.data
-      localStorage.setItem('token', token)
-      
+      const { access_token } = response.data
+      localStorage.setItem('token', access_token)
+
       // Redirect to dashboard after successful login
       router.push('/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed')
+      const errorData = err.response?.data
+      let errorMessage = 'Login failed'
+
+      if (errorData?.message) {
+        errorMessage = errorData.message
+      } else if (Array.isArray(errorData?.detail)) {
+        // Handle Pydantic validation errors
+        errorMessage = errorData.detail.map((e: any) => e.msg || e.message).join(', ')
+      } else if (errorData?.detail) {
+        errorMessage = typeof errorData.detail === 'string' ? errorData.detail : 'Login failed'
+      }
+
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -45,75 +62,74 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Sign in to your account
-          </h2>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{error}</div>
-            </div>
-          )}
-          
-          <input type="hidden" name="remember" defaultValue="true" />
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-              />
-            </div>
+      <Container size="sm" centered>
+        <Card padding="lg" shadow="lg">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              Sign in to your account
+            </h2>
           </div>
 
-          <div>
-            <button
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-md bg-error-50 p-4" role="alert">
+                <p className="text-sm text-error-700">{error}</p>
+              </div>
+            )}
+
+            {/* Email Field */}
+            <Input
+              id="email"
+              label="Email address"
+              type="email"
+              autoComplete="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+
+            {/* Password Field */}
+            <Input
+              id="password"
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+
+            {/* Submit Button */}
+            <Button
               type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              variant="primary"
+              size="lg"
+              fullWidth
+              loading={loading}
             >
               {loading ? 'Signing in...' : 'Sign in'}
-            </button>
+            </Button>
+          </form>
+
+          {/* Sign Up Link */}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-600">
+              Don&apos;t have an account?{' '}
+              <Link
+                href="/signup"
+                className="font-medium text-primary-600 hover:text-primary-500"
+              >
+                Sign up
+              </Link>
+            </p>
           </div>
-        </form>
-        
-        <div className="text-center mt-4">
-          <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
-            <Link href="/signup" className="font-medium text-indigo-600 hover:text-indigo-500">
-              Sign up
-            </Link>
-          </p>
-        </div>
-      </div>
+        </Card>
+      </Container>
     </div>
   )
 }

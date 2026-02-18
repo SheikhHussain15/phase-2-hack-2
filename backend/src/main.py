@@ -1,12 +1,18 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from src.api.auth_routes import router as auth_router
 from src.api.user_routes import router as user_router
-from src.api.task_routes import router as task_router
+from src.api.task_routes import router as task_router, simple_router as simple_task_router
 from contextlib import asynccontextmanager
 from src.database import engine
 from src.models.user import User
 from src.models.task import Task
 from sqlmodel import SQLModel
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,10 +29,20 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Include routers
-app.include_router(auth_router, prefix="/api")
-app.include_router(user_router, prefix="/api")
-app.include_router(task_router, prefix="/api")
+# Add CORS middleware BEFORE including routers
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers (routers have their own prefixes defined)
+app.include_router(auth_router)  # /auth/*
+app.include_router(user_router)  # /users/*
+app.include_router(task_router)  # /tasks/*
+app.include_router(simple_task_router)  # /tasks-simple/*
 
 @app.get("/")
 def read_root():

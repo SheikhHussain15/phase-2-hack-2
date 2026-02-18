@@ -1,52 +1,134 @@
-// frontend/src/components/ui/Button.tsx
+'use client'
 
-import React from 'react';
+import React from 'react'
 
-export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
-  size?: 'default' | 'sm' | 'lg' | 'icon';
-  asChild?: boolean;
+export interface ButtonProps {
+  // Content
+  children: React.ReactNode
+  variant?: 'primary' | 'secondary' | 'danger' | 'ghost'
+  size?: 'sm' | 'md' | 'lg'
+  icon?: React.ReactNode
+
+  // State
+  disabled?: boolean
+  loading?: boolean
+  fullWidth?: boolean
+
+  // Behavior
+  type?: 'button' | 'submit' | 'reset'
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void
+
+  // Accessibility
+  'aria-label'?: string
+  'aria-disabled'?: boolean
+
+  // Styling
+  className?: string
+  style?: React.CSSProperties
 }
 
-const variantClasses = {
-  default: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-  destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
-  outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-gray-500',
-  secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500',
-  ghost: 'hover:bg-gray-100 hover:text-gray-700 focus:ring-gray-500',
-  link: 'text-blue-600 underline-offset-4 hover:underline',
-};
-
-const sizeClasses = {
-  default: 'h-10 px-4 py-2',
-  sm: 'h-9 rounded-md px-3',
-  lg: 'h-11 rounded-md px-8',
-  icon: 'h-10 w-10',
-};
-
-export function Button({
-  className = '',
-  variant = 'default',
-  size = 'default',
-  disabled,
+export default function Button({
   children,
-  ...props
+  variant = 'primary',
+  size = 'md',
+  icon,
+  disabled = false,
+  loading = false,
+  fullWidth = false,
+  type = 'button',
+  onClick,
+  'aria-label': ariaLabel,
+  'aria-disabled': ariaDisabled,
+  className = '',
+  style,
 }: ButtonProps) {
-  const baseClasses = 
-    'inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
+  // Base styles
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-all duration-normal focus:outline-none focus:ring-2 focus:ring-offset-2'
   
-  const variantClass = variantClasses[variant];
-  const sizeClass = sizeClasses[size];
+  // Variant styles
+  const variantStyles = {
+    primary: 'bg-primary-500 text-white hover:bg-primary-600 active:bg-primary-700 focus:ring-primary-500 shadow-sm hover:shadow-md',
+    secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300 focus:ring-gray-500 border border-gray-300',
+    danger: 'bg-error-500 text-white hover:bg-error-600 active:bg-error-700 focus:ring-error-500 shadow-sm',
+    ghost: 'bg-transparent text-primary-500 hover:bg-primary-50 active:bg-primary-100 focus:ring-primary-500',
+  }
   
-  const classes = `${baseClasses} ${variantClass} ${sizeClass} ${className}`;
-
+  // Size styles
+  const sizeStyles = {
+    sm: 'px-3 py-1.5 text-sm min-h-[32px]',
+    md: 'px-4 py-2 text-base min-h-[40px]',
+    lg: 'px-6 py-3 text-lg min-h-[48px]',
+  }
+  
+  // Disabled/Loading styles
+  const disabledStyles = disabled || loading 
+    ? 'opacity-50 cursor-not-allowed' 
+    : 'cursor-pointer'
+  
+  // Full width
+  const widthStyles = fullWidth ? 'w-full' : ''
+  
+  // Combine all classes
+  const buttonClasses = [
+    baseStyles,
+    variantStyles[variant],
+    sizeStyles[size],
+    disabledStyles,
+    widthStyles,
+    className,
+  ].filter(Boolean).join(' ')
+  
+  // Handle click
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (disabled || loading) {
+      e.preventDefault()
+      return
+    }
+    onClick?.(e)
+  }
+  
   return (
     <button
-      className={classes}
-      disabled={disabled}
-      {...props}
+      type={type}
+      className={buttonClasses}
+      disabled={disabled || loading}
+      aria-label={ariaLabel}
+      aria-disabled={ariaDisabled || disabled || loading}
+      style={style}
+      onClick={handleClick}
     >
+      {/* Icon */}
+      {icon && !loading && (
+        <span className="mr-2 inline-flex items-center">
+          {icon}
+        </span>
+      )}
+
+      {/* Loading Spinner */}
+      {loading && (
+        <svg
+          className="animate-spin -ml-1 mr-2 h-4 w-4"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+        >
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
+        </svg>
+      )}
+
       {children}
     </button>
-  );
+  )
 }

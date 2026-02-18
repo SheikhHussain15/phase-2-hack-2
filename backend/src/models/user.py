@@ -8,6 +8,7 @@ def generate_uuid():
 
 class UserBase(SQLModel):
     email: str = Field(unique=True, nullable=False)
+    name: Optional[str] = Field(default=None)
     created_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = Field(default_factory=datetime.utcnow)
 
@@ -23,6 +24,7 @@ class UserPublic(UserBase):
     Public representation of a user (without sensitive data)
     """
     id: str
+    name: Optional[str]
     created_at: datetime
     updated_at: datetime
 
@@ -30,7 +32,7 @@ class UserCreate(UserBase):
     """
     Schema for creating a new user
     """
-    password: str
+    password: str = Field(min_length=8, max_length=72)
 
 class UserUpdate(SQLModel):
     """

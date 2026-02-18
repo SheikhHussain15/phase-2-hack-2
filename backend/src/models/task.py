@@ -28,9 +28,17 @@ class TaskPublic(TaskBase):
     created_at: datetime
     updated_at: datetime
 
+class TaskCreateRequest(SQLModel):
+    """
+    Schema for creating a new task (request body)
+    """
+    title: str
+    description: Optional[str] = None
+    completed: bool = False
+
 class TaskCreate(TaskBase):
     """
-    Schema for creating a new task
+    Schema for creating a new task (internal use)
     """
     title: str
 
